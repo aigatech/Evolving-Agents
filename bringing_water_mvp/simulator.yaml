@@ -1,22 +1,24 @@
 env:
-  device: null                          # (None or str): specifies the device to be used if running on the gpu with torch backend
-  automatic_reset: false                # (bool): whether to automatic reset after an episode finishes
-  flatten_action_space: false           # (bool): whether to flatten the action space as a sinle 1D-array
-  flatten_obs_space: false              # (bool): whether the observation space should be flattened when generated
-  use_external_obs: false               # (bool): Whether to use external observations or not
+  device: null
+  automatic_reset: false
+  flatten_action_space: false
+  flatten_obs_space: false
+  use_external_obs: false
   initial_pos_z_offset: 0.1
-  external_sensors:                     # (None or list): If specified, list of sensor configurations for external sensors to add. Should specify sensor "type" and any additional kwargs to instantiate the sensor. Each entry should be the kwargs passed to @create_sensor, in addition to position, orientation
+
+  # External camera for a stable image source (not tied to robot model)
+  external_sensors:
     - sensor_type: VisionSensor
       name: external_sensor0
       relative_prim_path: /external_sensor0
       modalities: [rgb, depth]
       sensor_kwargs:
-        image_height: 128
-        image_width: 128
-      position: [0, 0, 1.0]
-      orientation: [0.707, 0.0, 0.0, 0.707]
+        image_height: 256
+        image_width: 256
+      # Adjust to frame the kitchen/fridge; tweak as needed
+      position: [0.0, -3.0, 1.5]
+      orientation: [0.0, 0.0, 0.0, 1.0]
       pose_frame: parent
-
 
 render:
   viewer_width: 1280
@@ -31,17 +33,16 @@ scene:
   num_waypoints: 1
   waypoint_resolution: 0.2
   not_load_object_categories: null
-  load_room_types: ["living_room", "kitchen"]
+  load_room_types: ["kitchen", "living_room"]
   load_room_instances: null
   seg_map_resolution: 1.0
   scene_source: OG
   include_robots: true
 
-robots: 
+robots:
   - type: R1Pro
+    name: r1
     obs_modalities: [rgb, depth]
-    include_sensor_names: null
-    exclude_sensor_names: null
     scale: 1.0
     self_collision: false
     action_normalize: true
@@ -51,8 +52,8 @@ robots:
     sensor_config:
       VisionSensor:
         sensor_kwargs:
-          image_height: 1024
-          image_width: 1024
+          image_height: 512
+          image_width: 512
     controller_config:
       base:
         name: HolonomicBaseJointController
@@ -96,24 +97,17 @@ robots:
         command_input_limits: default
         command_output_limits: default
 
-objects:
-  - type: DatasetObject
-    name: delicious_apple
-    category: apple
-    model: agveuv
-    position: [0, 0, 1.0]
-
 task:
   type: BehaviorTask
-  activity_name: make_pizza
+  activity_name: bringing_water     # folder name under OG_BDDL_ROOT (bringing_water/)
+  predefined_problem: problem0      # file name (problem0.bddl)
   activity_definition_id: 0
   activity_instance_id: 0
-  predefined_problem: null
-  online_object_sampling: false
+  online_object_sampling: false     # use the predefined instance from the BDDL
   debug_object_sampling: null
   highlight_task_relevant_objects: false
   use_presampled_robot_pose: true
   termination_config:
-    max_steps: 500
+    max_steps: 1                    # just build + snapshot
   reward_config:
     r_potential: 1.0
