@@ -98,7 +98,9 @@ def main():
     # Build the world & get initial observation
     obs = env.reset()
 
-    rgb, src = _find_first_rgb(obs)
+    print(obs)
+
+    rgb, src = _find_first_rgb(obs[0])
     if rgb is None:
         print("No RGB frame found in initial observation.")
     else:
